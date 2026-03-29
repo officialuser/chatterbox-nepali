@@ -50,6 +50,7 @@ To generate Nepali speech correctly, you **must** use the provided test scripts.
 - **Reference Audio**: 10 seconds (samples/achyut_ref_10s.wav)
 - **Generation Time (MPS)**: **~115 seconds**
 - **Real-time Factor**: ~0.35x
+- **Sample Output**: [🎧 Listen to nepali_test_output.wav](./nepali_test_output.wav)
 
 #### Run the test command:
 ```bash
