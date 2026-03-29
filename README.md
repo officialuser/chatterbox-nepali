@@ -99,8 +99,8 @@ data/nepali/
 ### 2. `metadata.csv` (Pipe-separated)
 The file should **not** have a header. Use the `filename|[ne]text` format:
 ```csv
-voice_01|[ne]नमस्ते संसार, यो मेरो आवाज हो।
-voice_02|[ne]नेपाली भाषा धेरै मीठो छ।
+voice_01|[ne]नमस्ते संसार, यो मेरो आवाज हो
+voice_02|[ne]नेपाली भाषा धेरै मीठो छ
 ```
 
 ### 3. Audio Requirements
