@@ -40,12 +40,68 @@ pip install -e .
 
 ---
 
-## 🏋️ Training / Generation
-This project encourages you to build the final model weights yourself! When you reach the end of your training cycle (e.g., 50 epochs), the script will automatically consolidate your efforts and generate a high-performance **`t3_mtl_nepali_final.safetensors`** file.
+## 🎙️ Inference & Implementation
 
-### How to Resume Training:
+### 🛡️ Quick Testing
+To generate Nepali speech correctly, you **must** use the provided test scripts. Standard library imports from Hugging Face will not support Devanagari without these specific patches.
+
+#### Benchmark (M2 Max 64GB)
+- **Input**: Long paragraph (~45 words)
+- **Reference Audio**: 10 seconds
+- **Generation Time (MPS)**: **~115 seconds**
+- **Real-time Factor**: ~0.35x (1 second of audio takes ~3 seconds to generate)
+
+#### Run the test command:
 ```bash
 # Make sure your environment is active
+conda activate chatterbox_ne
+export PYTHONPATH=src
+
+python3 test_nepali.py \
+  --checkpoint "t3_nepali_epoch_20.pt" \
+  --ref_audio "samples/achyut_ref_10s.wav" \
+  --text "इन्द्रेणी वा इन्द्रधनुष प्रकाश र रंगबाट उत्पन्न भएको यस्तो घटना हो जसमा रंगीन प्रकाशको एउटा अर्धवृत आकाशमा देखिन्छ। जब सूर्यको प्रकाश पृथ्वीको वायुमण्डलमा भएको पानीको थोपा माथि पर्छ, पानीको थोपाले प्रकाशलाई परावर्तन, आवर्तन र डिस्पर्सन गर्दछ।" \
+  --output "nepali_test_output.wav"
+```
+
+### 🏮 Web UI (Gradio)
+Launch a graphical interface to test voices instantly:
+```bash
+# Automatically detects and loads local Nepali weights
+conda activate chatterbox_ne
+export PYTHONPATH=src
+python3 gradio_nepali.py
+```
+
+---
+
+## 🏋️ Training / Dataset Format
+If you wish to fine-tune the model further or use your own voice data, ensure your dataset follows the standard format:
+
+### 1. File Structure
+```text
+data/nepali/
+├── metadata.csv
+└── wavs/
+    ├── voice_01.wav
+    ├── voice_02.wav
+    └── ...
+```
+
+### 2. `metadata.csv` (Pipe-separated)
+The file should **not** have a header. Use the `filename|text` format:
+```csv
+voice_01|नमस्ते संसार, यो मेरो आवाज हो।
+voice_02|नेपाली भाषा धेरै मीठो छ।
+```
+
+### 3. Audio Requirements
+*   **Format**: Mono WAV
+*   **Sample Rate**: 24,000 Hz or 48,000 Hz (Internal resampling to 16kHz occurs for encoder).
+*   **Duration**: 2 to 10 seconds per clip is ideal for stability.
+
+### 4. Resume Training
+```bash
 conda activate chatterbox_ne
 export PYTHONPATH=src
 
@@ -58,51 +114,9 @@ python3 src/chatterbox/train_nepali.py \
   --save_every 5 \
   --resume_t3_weights "t3_nepali_epoch_20.pt"
 ```
+*Note: Reaching the final epoch will automatically generate **`t3_mtl_nepali_final.safetensors`**.*
 
 ---
-
-## 🎙️ Inference & Implementation
-
-### 🛡️ Quick Testing
-To generate Nepali speech correctly, you **must** use the provided test scripts. Standard library imports from Hugging Face will not support Devanagari without these specific patches.
-
-#### Using a Checkpoint (.pt):
-```bash
-# Make sure your environment is active
-conda activate chatterbox_ne
-export PYTHONPATH=src
-
-python3 test_nepali.py \
-  --checkpoint "t3_nepali_epoch_20.pt" \
-  --ref_audio "data/nepali/wavs/nep_sample.wav" \
-  --text "इन्द्रेणी वा इन्द्रधनुष प्रकाश र रंगबाट उत्पन्न भएको यस्तो घटना हो जसमा रंगीन प्रकाशको एउटा अर्धवृत आकाशमा देखिन्छ। जब सूर्यको प्रकाश पृथ्वीको वायुमण्डलमा भएको पानीको थोपा माथि पर्छ, पानीको थोपाले प्रकाशलाई परावर्तन, आवर्तन र डिस्पर्सन गर्दछ।" \
-  --output "nepali_test.wav"
-```
-
-#### Using Final Weights (.safetensors):
-Once you have trained the model and produced the `.safetensors` file, the command is the same:
-```bash
-# Make sure your environment is active
-conda activate chatterbox_ne
-export PYTHONPATH=src
-
-python3 test_nepali.py \
-  --checkpoint "t3_mtl_nepali_final.safetensors" \
-  --ref_audio "data/nepali/wavs/nep_sample.wav" \
-  --text "तपाईंको नयाँ नेपाली एआई तयार छ।" \
-  --output "final_output.wav"
-```
-
-### 🏮 Web UI (Gradio)
-Launch a graphical interface to test voices instantly:
-```bash
-# Automatically detects and loads local Nepali weights
-# Make sure your environment is active
-conda activate chatterbox_ne
-export PYTHONPATH=src
-
-python3 gradio_nepali.py
-```
 
 ## 🛠️ Critical Bug Fixes (Patched in this Fork)
 This fork includes essential fixes for Devanagari that are **not available** in the original repository:
@@ -113,4 +127,5 @@ This fork includes essential fixes for Devanagari that are **not available** in 
 ## 📄 License & Credits
 * Original architecture by **Resemble AI**.
 * Fine-tuning and Nepali optimization by **officialuser**.
+* Reference Audio in samples by **Achyut Ghimire (Bulbul)**.
 * Distributed under the **MIT License**.
