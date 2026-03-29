@@ -18,6 +18,9 @@ To ensure repository performance, large training checkpoints are hosted on Huggi
 | :--- | :--- | :--- |
 | `t3_nepali_epoch_20.pt` | **Base Nepali Checkpoint** | Use for **quick testing** or as a starting point to **train further**. |
 
+> [!TIP]
+> While the provided checkpoint works for testing, we recommend training for **50 to 100 epochs** on your dedicated dataset to achieve significantly more natural-sounding voices and smoother Nepali prosody.
+
 *Place this file in the root folder of this repository after downloading.*
 
 ---
@@ -45,12 +48,14 @@ pip install -e .
 ### 🛡️ Quick Testing
 To generate Nepali speech correctly, you **must** use the provided test scripts. Standard library imports from Hugging Face will not support Devanagari without these specific patches.
 
+#### 🎧 Hear the Results
+**[Listen to the Nepali Rainbow Benchmark Output](./nepali_test_output.wav)**
+
 #### Benchmark (M2 Max 64GB)
 - **Input**: Long paragraph (~45 words)
 - **Reference Audio**: 10 seconds (samples/achyut_ref_10s.wav)
 - **Generation Time (MPS)**: **~115 seconds**
 - **Real-time Factor**: ~0.35x
-- **Sample Output**: [🎧 Listen to nepali_test_output.wav](./nepali_test_output.wav)
 
 #### Run the test command:
 ```bash
