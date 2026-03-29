@@ -47,9 +47,9 @@ To generate Nepali speech correctly, you **must** use the provided test scripts.
 
 #### Benchmark (M2 Max 64GB)
 - **Input**: Long paragraph (~45 words)
-- **Reference Audio**: 10 seconds
+- **Reference Audio**: 10 seconds (samples/achyut_ref_10s.wav)
 - **Generation Time (MPS)**: **~115 seconds**
-- **Real-time Factor**: ~0.35x (1 second of audio takes ~3 seconds to generate)
+- **Real-time Factor**: ~0.35x
 
 #### Run the test command:
 ```bash
@@ -65,9 +65,8 @@ python3 test_nepali.py \
 ```
 
 ### 🏮 Web UI (Gradio)
-Launch a graphical interface to test voices instantly:
+Launch a graphical interface to test voices instantly. It will automatically detect and load your local Nepali weights:
 ```bash
-# Automatically detects and loads local Nepali weights
 conda activate chatterbox_ne
 export PYTHONPATH=src
 python3 gradio_nepali.py
@@ -89,16 +88,15 @@ data/nepali/
 ```
 
 ### 2. `metadata.csv` (Pipe-separated)
-The file should **not** have a header. Use the `filename|text` format:
+The file should **not** have a header. Use the `filename|[ne]text` format:
 ```csv
-voice_01|नमस्ते संसार, यो मेरो आवाज हो।
-voice_02|नेपाली भाषा धेरै मीठो छ।
+voice_01|[ne]नमस्ते संसार, यो मेरो आवाज हो।
+voice_02|[ne]नेपाली भाषा धेरै मीठो छ।
 ```
 
 ### 3. Audio Requirements
-*   **Format**: Mono WAV
-*   **Sample Rate**: 24,000 Hz or 48,000 Hz (Internal resampling to 16kHz occurs for encoder).
-*   **Duration**: 2 to 10 seconds per clip is ideal for stability.
+*   **Format**: Mono WAV (24,000 Hz or 48,000 Hz recommended).
+*   **Duration**: 2 to 10 seconds per clip.
 
 ### 4. Resume Training
 ```bash
@@ -114,7 +112,23 @@ python3 src/chatterbox/train_nepali.py \
   --save_every 5 \
   --resume_t3_weights "t3_nepali_epoch_20.pt"
 ```
-*Note: Reaching the final epoch will automatically generate **`t3_mtl_nepali_final.safetensors`**.*
+
+---
+
+## 🎯 Post-Training (Safetensors Generation)
+Once your training reaches the final epoch (e.g. 50), the script will automatically consolidate your efforts and generate a high-performance **`t3_mtl_nepali_final.safetensors`** file.
+
+### Using your Optimized Safetensors:
+Loading the finished `.safetensors` format is significantly **faster** and more secure than resuming from `.pt` checkpoints. You can use it in production with the following logic:
+
+```bash
+# Use the same test script but point to your final safetensors
+python3 test_nepali.py \
+  --checkpoint "t3_mtl_nepali_final.safetensors" \
+  --ref_audio "your_reference.wav" \
+  --text "तपाईंको नयाँ नेपाली एआई तयार छ।" \
+  --output "production_output.wav"
+```
 
 ---
 
