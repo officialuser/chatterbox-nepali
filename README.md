@@ -22,6 +22,24 @@ To ensure repository performance, large training checkpoints are hosted on Huggi
 
 ---
 
+## ⚙️ Installation
+Follow these steps to set up the environment and download the codebase:
+
+```bash
+# 1. Create and activate a dedicated conda environment
+conda create -n chatterbox_ne python=3.11 -y
+conda activate chatterbox_ne
+
+# 2. Clone the repository
+git clone https://github.com/officialuser/chatterbox-nepali.git
+cd chatterbox-nepali
+
+# 3. Install dependencies in editable mode
+pip install -e .
+```
+
+---
+
 ## 🏋️ Training / Generation
 This project encourages you to build the final model weights yourself! When you reach the end of your training cycle (e.g., 50 epochs), the script will automatically consolidate your efforts and generate a high-performance **`t3_mtl_nepali_final.safetensors`** file.
 
@@ -43,7 +61,7 @@ python3 src/chatterbox/train_nepali.py \
 ## 🎙️ Inference & Implementation
 
 ### 🛡️ Quick Testing
-To generate Nepali speech correctly using the custom logic in this repository, you **must** use the provided test scripts. Standard library imports from Hugging Face will not support Devanagari without these specific patches.
+To generate Nepali speech correctly, you **must** use the provided test scripts. Standard library imports from Hugging Face will not support Devanagari without these specific patches.
 
 #### Using a Checkpoint (.pt):
 ```bash
