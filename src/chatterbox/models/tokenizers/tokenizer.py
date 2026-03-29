@@ -256,6 +256,9 @@ def add_russian_stress(text: str) -> str:
 class MTLTokenizer:
     def __init__(self, vocab_file_path):
         self.tokenizer: Tokenizer = Tokenizer.from_file(vocab_file_path)
+        # Ensure [ne] and possibly other tokens are present
+        new_tokens = ["[ne]"]
+        self.tokenizer.add_tokens([t for t in new_tokens if t not in self.tokenizer.get_vocab()])
         model_dir = Path(vocab_file_path).parent
         self.cangjie_converter = ChineseCangjieConverter(model_dir)
         self.check_vocabset_sot_eot()
@@ -299,7 +302,9 @@ class MTLTokenizer:
         
         # Prepend language token
         if language_id:
-            txt = f"[{language_id.lower()}]{txt}"
+            lang_tag = f"[{language_id.lower()}]"
+            if not txt.startswith(lang_tag):
+                txt = f"{lang_tag}{txt}"
         
         txt = txt.replace(' ', SPACE)
         return self.tokenizer.encode(txt).ids

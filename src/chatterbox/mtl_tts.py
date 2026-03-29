@@ -45,6 +45,7 @@ SUPPORTED_LANGUAGES = {
   "sw": "Swahili",
   "tr": "Turkish",
   "zh": "Chinese",
+  "ne": "Nepali",
 }
 
 
@@ -126,9 +127,7 @@ class Conditionals:
 
     @classmethod
     def load(cls, fpath, map_location="cpu"):
-        if isinstance(map_location, str):
-            map_location = torch.device(map_location)
-        kwargs = torch.load(fpath, map_location=map_location, weights_only=True)
+        kwargs = torch.load(fpath, map_location='cpu', weights_only=True)
         return cls(T3Cond(**kwargs['t3']), kwargs['gen'])
 
 
@@ -171,7 +170,7 @@ class ChatterboxMultilingualTTS:
 
         ve = VoiceEncoder()
         ve.load_state_dict(
-            torch.load(ckpt_dir / "ve.pt", map_location=map_location, weights_only=True)
+            torch.load(ckpt_dir / "ve.pt", map_location='cpu', weights_only=True)
         )
         ve.to(device).eval()
 
@@ -179,12 +178,26 @@ class ChatterboxMultilingualTTS:
         t3_state = load_safetensors(ckpt_dir / "t3_mtl23ls_v2.safetensors")
         if "model" in t3_state.keys():
             t3_state = t3_state["model"][0]
-        t3.load_state_dict(t3_state)
+            
+        # Handle vocabulary size mismatch (e.g. when adding new language tokens)
+        state_vocab_size = t3_state["text_emb.weight"].shape[0]
+        model_vocab_size = t3.hp.text_tokens_dict_size
+        if state_vocab_size != model_vocab_size:
+            # If state is smaller, we can load it into the model's resized embeddings
+            # But t3.load_state_dict will fail if shapes don't match.
+            # So we resize the model to match the state, OR we pad the state.
+            # Providing a flexible way: resize model to state size first, then load, then resize back to desired size.
+            current_hp_size = t3.hp.text_tokens_dict_size
+            t3.resize_text_embeddings(state_vocab_size)
+            t3.load_state_dict(t3_state)
+            t3.resize_text_embeddings(current_hp_size)
+        else:
+            t3.load_state_dict(t3_state)
         t3.to(device).eval()
 
         s3gen = S3Gen()
         s3gen.load_state_dict(
-            torch.load(ckpt_dir / "s3gen.pt", map_location=map_location, weights_only=True)
+            torch.load(ckpt_dir / "s3gen.pt", map_location='cpu', weights_only=True)
         )
         s3gen.to(device).eval()
 

@@ -46,3 +46,8 @@ checkpoints/
 
 # Ignore generated sample .wav files
 **/*.wav
+.DS_Store
+
+# Model checkpoints (hosted on Hugging Face)
+*.safetensors
+*.pt

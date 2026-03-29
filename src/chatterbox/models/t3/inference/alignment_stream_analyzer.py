@@ -126,20 +126,20 @@ class AlignmentStreamAnalyzer:
         if self.started and self.started_at is None:
             self.started_at = T
 
-        # Is generation likely complete?
-        self.complete = self.complete or self.text_position >= S - 3
+        # Is generation likely complete? (Broadened to S-6 for Devanagari token clustering)
+        self.complete = self.complete or self.text_position >= S - 6
         if self.complete and self.completed_at is None:
             self.completed_at = T
 
         # NOTE: EOS rarely assigned activations, and second-last token is often punctuation, so use last 3 tokens.
         # NOTE: due to the false-start behaviour, we need to make sure we skip activations for the first few tokens.
-        last_text_token_duration = A[15:, -3:].sum()
+        last_text_token_duration = A[15:, -6:].sum()
 
         # Activations for the final token that last too long are likely hallucinations.
-        long_tail = self.complete and (A[self.completed_at:, -3:].sum(dim=0).max() >= 5) # 200ms
+        long_tail = self.complete and (A[self.completed_at:, -6:].sum(dim=0).max() >= 5) # 200ms
 
         # If there are activations in previous tokens after generation has completed, assume this is a repetition error.
-        alignment_repetition = self.complete and (A[self.completed_at:, :-5].max(dim=1).values.sum() > 5)
+        alignment_repetition = self.complete and (A[self.completed_at:, :-7].max(dim=1).values.sum() > 5)
         
         # Track generated tokens for repetition detection
         if next_token is not None:
@@ -150,23 +150,23 @@ class AlignmentStreamAnalyzer:
                 token_id = next_token
             self.generated_tokens.append(token_id)
             
-            # Keep only last 8 tokens to prevent memory issues
-            if len(self.generated_tokens) > 8:
-                self.generated_tokens = self.generated_tokens[-8:]
+            # Keep only last 20 tokens to prevent memory issues
+            if len(self.generated_tokens) > 20:
+                self.generated_tokens = self.generated_tokens[-20:]
             
-        # Check for excessive token repetition (3x same token in a row)
+        # Check for excessive token repetition (15x same token in a row)
+        # 15 tokens at 25Hz = ~600ms of a single robotic continuous tone.
         token_repetition = (
-            # self.complete and 
-            len(self.generated_tokens) >= 3 and
-            len(set(self.generated_tokens[-2:])) == 1
+            len(self.generated_tokens) >= 15 and
+            len(set(self.generated_tokens[-15:])) == 1
         )
         
         if token_repetition:
             repeated_token = self.generated_tokens[-1]
-            logger.warning(f"🚨 Detected 2x repetition of token {repeated_token}")
+            logger.warning(f"🚨 Detected abnormal 15x repetition of acoustic token {repeated_token}")
             
         # Suppress EoS to prevent early termination
-        if cur_text_posn < S - 3 and S > 5:  # Only suppress if text is longer than 5 tokens
+        if cur_text_posn < S - 6 and S > 8:  # Broadened to S-6 for Devanagari characters
             logits[..., self.eos_idx] = -2**15
 
         # If a bad ending is detected, force emit EOS by modifying logits
